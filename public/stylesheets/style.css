@@ -1,0 +1,62 @@
+body {
+    font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+#index-page {
+    padding-top: 10%;
+}
+
+#main {
+    padding-top: 5%;
+}
+
+.big-g {
+    width: 350px; 
+    vertical-align: middle;   
+}
+
+.font-indie-flower {
+    font-family: 'Indie Flower', cursive;
+}
+
+.font-indie-flower.twelve-em {
+    font-size : 12em;
+}
+
+.font-indie-flower.two-em {
+    font-size : 2em;   
+}
+
+.font-indie-flower.three-em {
+    font-size : 3em;   
+}
+
+td.centered, th.centered, .centered {
+    text-align: center; /* center checkbox horizontally */
+    vertical-align: middle; /* center checkbox vertically */
+}
+
+td.four-per {
+    width: 4%;
+}
+
+td.eight-per {
+    width: 8%;
+}
+
+td.twelve-per {
+    width: 12%;
+}
+
+td.sixteen-per {
+    width: 16%;
+}
+
+.disabled {
+    text-decoration: line-through;
+    color: gray;
+}
+
+.margin-top-8px {
+    margin-top: 8px;
+}

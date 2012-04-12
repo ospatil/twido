@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Gnie - The full-stack JS TODO Manager</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="Omkar Patil">
+
+    <!-- Le styles -->
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href='http://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
+    <link href="stylesheets/jquery.jnotify.min.css" rel="stylesheet">
+    <link href="stylesheets/style.css" rel="stylesheet">
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="#">Gnie</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li><a href="#about">About</a></li>
+            </ul>
+            <p class="navbar-text pull-right"><a id="logout" data-bind="visible: online(), attr: { href: logoutUrl" title="Logout">Logout</a></p>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="content">
+        <div id="index-page" data-bind="visible: !online()">      
+          <div class="row">
+              <div>
+                  <a id="login-link" href="/auth/twitter"><img class="big-g" src="images/google-g-logo-webtreatsetc-2.png"/></a>
+                  <span class="font-indie-flower twelve-em">nie</span>
+                  <span class="font-indie-flower two-em">The full-stack JS Todo Manager</span>
+              </div>
+          </div>
+          <div class="row">
+              <div class="span8 offset3">
+                  <p><img src="images/arrow-up.png"/></p>
+                  <h3 class="font-indie-flower three-em">Click the big G to start</h3>
+              </div>
+          </div>
+        </div>
+
+        <div id="main" class="span8" data-bind="visible: online()">
+          <h3 >Welcome <span data-bind="text: name">username</span><small>  See what you have got in your basket ...</small></h3>
+          <form class="well form-inline" data-bind="submit: addTask" method="post">
+              <label class="control-label" for="task-field">Add Task:</label>
+              <input type="text" class="input-xlarge" id="task-field" data-bind="value: newTaskText" placeholder="What needs to be done?" />
+              <select class="input-small" data-bind="options: priorities, value: newTaskPriority"></select>
+            <button class="btn" type="submit">Add</button>
+          </form>
+          <table class="table table-striped table-bordered table-condensed" data-bind="visible: tasks().length > 0">
+              <thead><tr><th>Done?</th><th>Task</th><th class="centered">Priority</th><th colspan="2"></th></tr></thead>
+              <tbody data-bind="foreach: tasks">
+                  <tr>
+                      <td class="centered eight-per"><input type="checkbox" data-bind="checked: isDone, disable: editMode, click: $parent.toggleCompletion" /></td>
+                      <td data-bind="css: {disabled: isDone}">
+                        <span data-bind="visible: !editMode(), text: title"></span>
+                        <input class="input-xlarge margin-top-8px" data-bind="visible: editMode(), value: title" />
+                      </td>
+                      <td class="centered sixteen-per" data-bind="css: {disabled: isDone}">
+                        <span data-bind="visible: !editMode(), text: priority"></span>
+                        <select class="input-small margin-top-8px" data-bind="visible: editMode(), options: $parent.priorities, value: priority"></select>
+                        <!--<input data-bind="value: priority" /> -->
+                      </td>
+                      <td class="centered eight-per">
+                        <a data-bind="visible: !editMode(), click: $parent.edit"><i class="icon-edit" title="Edit"></i></a>
+                        <a data-bind="visible: editMode(), click: $parent.cancel"><i class="icon-share-alt" title="Cancel"></i></a>
+                        <a data-bind="visible: editMode(), click: $parent.editSave"><i class="icon-ok" title="Save"></i></a>
+                      </td>
+                      <td class="centered eight-per">
+                        <a data-bind="click: $parent.removeTask"><i class="icon-trash" title="Delete"></i></a>
+                      </td>
+                  </tr>
+              </tbody>
+          </table>
+        </div>
+
+        <div class="modal" id="about">
+          <div class="modal-header">
+            <a class="close" data-dismiss="modal">×</a>
+            <h3>About Gnie</h3>
+          </div>
+          <div class="modal-body">
+            <p>One fine body…</p>
+          </div>
+          <div class="modal-footer">
+            <a class="btn" data-dismiss="modal">Close</a>
+          </div>
+        </div>
+
+        <div class="modal" id="contact">
+          <div class="modal-header">
+            <a class="close" data-dismiss="modal">×</a>
+            <h3>Contact</h3>
+          </div>
+          <div class="modal-body">
+            <p>One fine body…</p>
+          </div>
+          <div class="modal-footer">
+            <a class="btn" data-dismiss="modal">Close</a>
+          </div>
+        </div>
+
+      </div>
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="javascripts/lib/sammy-latest.min.js"></script>
+    <script src="javascripts/lib/jquery.jnotify.min.js"></script>
+    <script src="javascripts/lib/knockout-2.0.0.js"></script>
+    <script src="javascripts/client-app.js"></script>
+  </body>
+</html>
