@@ -35,7 +35,7 @@
             <ul class="nav">
               <li><a href="#about">About</a></li>
             </ul>
-            <p class="navbar-text pull-right"><a id="logout" data-bind="visible: online(), attr: { href: logoutUrl" title="Logout">Logout</a></p>
+            <p class="navbar-text pull-right"><a id="logout" data-bind="visible: online(), attr: { href: logoutUrl}" title="Logout">Logout</a></p>
           </div><!--/.nav-collapse -->
         </div>
       </div>
@@ -60,7 +60,7 @@
         </div>
 
         <div id="main" class="span8" data-bind="visible: online()">
-          <h3 >Welcome <span data-bind="text: name">username</span><small>  See what you have got in your basket ...</small></h3>
+          <h3 >Welcome <span data-bind="text: name">username</span><small>  See what you have got in your bucket ...</small></h3>
           <form class="well form-inline" data-bind="submit: addTask" method="post">
               <label class="control-label" for="task-field">Add Task:</label>
               <input type="text" class="input-xlarge" id="task-field" data-bind="value: newTaskText" placeholder="What needs to be done?" />

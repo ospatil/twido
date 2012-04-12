@@ -42,18 +42,15 @@ $(document).ready(function() {
 
         var ajaxErrorCallback = function(xhr, textStatus, errorThrown) {
             if (xhr.status == 403) { //session expired
-                window.location.replace('/#err/403');
+                $.jnotify("Session Expired. Please login again.", {
+                    type: 'warning'
+                    , remove: function() {
+                        window.location.replace('/');
+                    }
+                }); //sticky notification
             } else {
                 $.jnotify("Oops!! Something snapped. Please try again.", "error");
             }
-        };
-
-        var ajaxSuccessFirstSteps =  function(data, textStatus, xhr) {
-           /* if (data.err) { //error return from server
-                $.jnotify("Oops!! Something snapped. Please try again.", "error");
-            } else if (xhr.status == 403) { //session expired
-                window.location.replace('/');
-            }*/
         };
 
         var updateTask = function(task, successCallback) {
@@ -66,11 +63,8 @@ $(document).ready(function() {
                 , data: data
                 , contentType: 'application/json'
                 , processData: false
-                , done: function(data, textStatus, xhr) {
-                    ajaxSuccessFirstSteps(data, textStatus, xhr);
-                    successCallback();
-                }
-                , fail: ajaxErrorCallback
+                , success: successCallback
+                , error: ajaxErrorCallback
             });        
         };
         
@@ -86,10 +80,9 @@ $(document).ready(function() {
             //TODO: make ajax call to server
             var jqxhr = $.post(url, jsTask, function(data, textStatus, xhr) {
                 //console.log("data received after creating task = " + data);
-                ajaxSuccessFirstSteps(data, textStatus, xhr);
                 newTask.id = data._id;
                 self.tasks.push(newTask);
-            }).fail(ajaxErrorCallback);
+            }).error(ajaxErrorCallback);
 
             self.newTaskText("");
             self.newTaskPriority("now");
@@ -103,10 +96,10 @@ $(document).ready(function() {
             $.ajax({
                 type: 'DELETE'
                 , url: url
-                , done: function (data, textStatus, xhr) {
-                    ajaxSuccessFirstSteps(data, textStatus, xhr);
+                , success: function (data, textStatus, xhr) {
                     self.tasks.remove(task);
                 }
+                , error: ajaxErrorCallback
             });
         };
 
@@ -157,16 +150,6 @@ $(document).ready(function() {
         this.get('#about', function() {
             //console.log('#about route called');
             $('#about').modal('show');
-            location.hash = '';
-        });
-
-        this.get('#err/:code', function() {
-            var code = this.params['code'];
-            if (code == 403) {
-                $.jnotify("Session Expired. Please login again.", "warning");
-            } else {
-                $.jnotify("Oops!! Something snapped. Please try again.", "error");
-            }
             location.hash = '';
         });
     }).run();

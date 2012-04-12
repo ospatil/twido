@@ -20,7 +20,7 @@ app.configure(function(){
 
     app.use(express.bodyParser());
     app.use(express.cookieParser());
-    app.use(express.session({cookie: {maxAge: 1 * 60000}, secret: conf.session_secret})); //max age = 10 min
+    app.use(express.session({cookie: {maxAge: 10 * 60000}, secret: conf.session_secret})); //max age = 10 min
     app.use(everyauth.middleware());
     app.use(express.methodOverride());
     app.use(app.router);

@@ -3,8 +3,7 @@ var everyauth   = require('everyauth')
     , util      = require('util')
     , model     = require('./model');
 
-everyauth.debug = true;
-everyauth.everymodule.moduleTimeout(2000); // Wait 2 seconds per step instead before timing out
+//everyauth.debug = true;
 
 /*everyauth.facebook
     .performRedirect( function (res, location) {
@@ -59,8 +58,6 @@ everyauth
     })
     .redirectPath('/');
 
-everyauth.everymodule.moduleErrback( function (err, data) {
-    //login error, redirect user to /
-    var res = data.res;
-    res.redirect('/#err/500');
+everyauth.everymodule.moduleErrback( function (err) {
+    throw err;
 });    
