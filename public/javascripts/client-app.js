@@ -1,16 +1,17 @@
 $(document).ready(function() {
+
+    ko.bindingHandlers.popover = {
+        init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
+            var options = valueAccessor() || {};
+            $(element).popover(options);
+        }
+    };
+
     var userUrl = '/users/:id'
         , taskCreateUrl = '/users/:id/tasks'
-        , taskUrl = '/users/:id/tasks/:tid';
-
-    $('#main').hide();
-    $('#logout').hide();
-    
-    $('#about').modal();
-    $('#about').modal('hide');
-    $('#contact').modal();
-    $('#contact').modal('hide');
-
+        , taskUrl = '/users/:id/tasks/:tid'
+        , buddiesUrl = '/users/:id/buddies';
+         
     function Task(data) {
         var self = this;
         self.id = data._id;
@@ -22,6 +23,13 @@ $(document).ready(function() {
         self.editingPriority = ko.observable();
     }
 
+    function Buddy(data) {
+        var self = this;
+        self.id = data.id;
+        self.screenName = data.screenName;
+        self.online = data.online;
+    }
+
     function UserViewModel(data) {
         var self = this;
 
@@ -31,11 +39,16 @@ $(document).ready(function() {
         self.email = data.email;
         self.online = ko.observable(data.online);
         self.logoutUrl = ko.observable('/logout?uid=' + data.id);
+        self.mainUrl = ko.observable('/main/#uid/' + data.id);
 
         self.tasks = ko.observableArray([]);
+        self.buddies = ko.observableArray([]);
 
         var mappedTasks = $.map(data.tasks, function(item) { return new Task(item) });
         self.tasks(mappedTasks);
+
+        var mappedBuddies = $.map(data.buddies, function(item) { return new Buddy(item) });
+        self.buddies(mappedBuddies);
 
         self.newTaskText = ko.observable();
         self.newTaskPriority = ko.observable();
@@ -47,7 +60,14 @@ $(document).ready(function() {
                     , remove: function() {
                         window.location.replace('/');
                     }
-                }); //sticky notification
+                }); 
+            } else if (xhr.status == 400) { //URL tampered
+                $.jnotify("URL tampering not allowed. Please login again.", {
+                    type: 'error'
+                    , remove: function() {
+                        window.location.replace('/');
+                    }
+                }); 
             } else {
                 $.jnotify("Oops!! Something snapped. Please try again.", "error");
             }
@@ -126,31 +146,71 @@ $(document).ready(function() {
             return true;
         };
 
+        self.getBuddies = function() {
+            var url = buddiesUrl.replace(':id', self.id);
+            $.getJSON(url, function(data) {
+                var mappedBuddies = $.map(data, function(item) { return new Buddy(item) });
+                self.buddies(mappedBuddies);
+            });
+        };
+
+        //draggables created after rendering the row
+        self.onAfterRenderTask = function(elements, data) {
+            $(elements).find('.icon-share-alt').draggable({
+                opacity: 0.7
+                , helper: function(event) {
+                    return $('<span class="label label-warning" id="' + data.id + '">' + data.title() + '</span>');
+                }
+            });
+            //$(elements).slideDown('slow');
+        };
+
+        //droppables created after rendering the buddy li
+        self.onAfterRenderBuddy = function(elements, data) {
+            $(elements).droppable({
+                drop: function( event, ui ) {
+                    //console.log('Droppable id = ', $(this).attr('id'));
+                    //console.log('draggable id = ' + ui.draggable[0].id);
+                    var taskId = ui.draggable[0].id;
+                    var url = taskUrl.replace(':id', self.id).replace(':tid', taskId);
+                    var data = ko.toJSON({uid: $(this).attr('id')});
+                    //console.log('Data to be PUT for move : ', data);
+                    //Get the actual task from observable array so that it can be removed 
+                    var taskToRemove = ko.utils.arrayFirst(self.tasks(), function(item) {
+                        return taskId === item.id;
+                    });
+                    //console.log('task to be removed : ', taskToRemove);
+                    $.ajax({
+                        type: 'PUT'
+                        , url: url
+                        , data: data
+                        , contentType: 'application/json'
+                        , processData: false
+                        , error: ajaxErrorCallback
+                        , success: function(data, textStatus, xhr) {
+                            //console.log('PUT success, now removing task : ', taskToRemove);
+                            self.tasks.remove(taskToRemove);
+                        }
+                    });
+
+                    $(this).effect('drop', function() {
+                        $(this).removeAttr('style').hide().effect('slide');
+                    });
+                }
+            });
+            $(elements).addClass(data.online ? 'buddy-online' : 'buddy-offline');
+        };
+
         self.priorities = ['now', 'soonish', 'later', 'wish'];
     }
 
-    Sammy(function() {
-        this.get('#uid/:id', function() {
-            var uid = this.params['id'];
-            //console.log('#uid route called with id = ' + uid);
-            var url = userUrl.replace(':id', uid);
-            //console.log('User URL = ' + url);
-            //TODO: convert ajax call to server into RESTful way
-            $.getJSON(url, function(data) {
-                //console.log("User data received : ", data);
-                var appViewModel = new UserViewModel(data);
-                //console.log("View Model : ", appViewModel);
-                
-                // Activates knockout.js
-                ko.applyBindings(appViewModel);
-            });
-            location.hash = '#main';
-        });
-
-        this.get('#about', function() {
-            //console.log('#about route called');
-            $('#about').modal('show');
-            location.hash = '';
-        });
-    }).run();
+    var pageUrl = $.url();
+    var uid = pageUrl.param('uid');
+    //console.log("UID received = " + uid);
+    var url = userUrl.replace(':id', uid);
+    $.getJSON(url, function(data) {
+        var appViewModel = new UserViewModel(data);
+        // Activates knockout.js
+        ko.applyBindings(appViewModel);
+    });
 });

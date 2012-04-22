@@ -17,11 +17,11 @@ everyauth.twitter.sendResponse(function(res, data) {
     //console.log('##### sendResponse custom step START #####\n'); 
     //check if uid is already present in the url, if yes, remove it
     var redirectPath = this.redirectPath();
-    var uidIndex = redirectPath.indexOf('#');
+    var uidIndex = redirectPath.indexOf('?');
     if (uidIndex > 0 ) {
         redirectPath = redirectPath.substring(0, uidIndex);
     }
-    this.redirectPath(redirectPath + '#uid/' + data.user.id);
+    this.redirectPath(redirectPath + '?uid=' + data.user.id);
     //console.log('##### sendResponse custom step END #####\n'); 
     //Your custom logic here
     this._super();
@@ -33,7 +33,7 @@ undefined exception in case of session expiry can be avoided
 everyauth.everymodule.handleLogout( function (req, res) {
     var self = this;
     var userId = null;
-    console.log('Param received in logout req = ' + req.query.uid);
+    //console.log('Param received in logout req = ' + req.query.uid);
     if (req.session && req.session.auth && req.session.auth.userId) {
         userId = req.session.auth.userId;
     } else {
@@ -56,7 +56,7 @@ everyauth
         model.findOrCreateByMetaData(accessToken, accessTokenSecret, twitterUserMetadata, promise);
         return promise;
     })
-    .redirectPath('/');
+    .redirectPath('/main');
 
 everyauth.everymodule.moduleErrback( function (err) {
     throw err;

@@ -32,8 +32,8 @@ body {
 }
 
 td.centered, th.centered, .centered {
-    text-align: center; /* center checkbox horizontally */
-    vertical-align: middle; /* center checkbox vertically */
+    text-align: center; /* center horizontally */
+    vertical-align: middle; /* center vertically */
 }
 
 td.four-per {
@@ -59,4 +59,31 @@ td.sixteen-per {
 
 .margin-top-8px {
     margin-top: 8px;
+}
+
+.text-centered {
+    text-align: center;
+}
+
+.buddy {
+    padding: 2px;
+    margin: 5px;
+}
+
+.buddy-online {
+    color: green;
+    background-color: lemonChiffon;
+}
+
+.buddy-offline {
+    color: gray;
+    background-color: whiteSmoke;
+}
+
+i.float-right {
+    float: right;
+}
+
+i.float-left {
+    float: left;
 }
