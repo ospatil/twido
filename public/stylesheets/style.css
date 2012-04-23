@@ -80,10 +80,10 @@ td.sixteen-per {
     background-color: whiteSmoke;
 }
 
-i.float-right {
+.float-right {
     float: right;
 }
 
-i.float-left {
+.float-left {
     float: left;
 }
