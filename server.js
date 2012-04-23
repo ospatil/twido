@@ -4,7 +4,8 @@ var express     = require('express')
     , util      = require('util')
     , conf      = require('./modules/conf')
     , model     = require('./modules/model')
-    , Resource  = require('express-resource');
+    , Resource  = require('express-resource')
+    , gzippo    = require('gzippo');
 
 var app = module.exports = express.createServer();
 
@@ -20,11 +21,12 @@ app.configure(function(){
 
     app.use(express.bodyParser());
     app.use(express.cookieParser());
-    app.use(express.session({cookie: {maxAge: 10 * 60000}, secret: conf.session_secret})); //max age = 10 min
+    app.use(express.session({cookie: {maxAge: 15 * 60000}, secret: conf.session_secret})); //max age = 10 min
     app.use(everyauth.middleware());
     app.use(express.methodOverride());
     app.use(app.router);
-    app.use(express.static(__dirname + '/public'));
+    //app.use(express.static(__dirname + '/public'));
+    app.use(gzippo.staticGzip(__dirname + '/public'));
 });
 
 app.configure('development', function(){

@@ -8,9 +8,10 @@ var mongoose    = require('mongoose')
 var self = this;
 
 var TaskSchema = new Schema({
-    title     : String,
-    isDone    : {type: Boolean, default: false},
-    priority  : {type: String, enum: ['now', 'soonish', 'later', 'wish'], default: 'now'}
+    title       : String,
+    isDone      : {type: Boolean, default: false},
+    priority    : {type: String, enum: ['now', 'soonish', 'later', 'wish'], default: 'now'},
+    from        : {type: String, default: 'own'}
 });
 
 var BuddySchema = new Schema({
@@ -124,7 +125,7 @@ exports.addTask = function(userid, taskData, callback) {
 }
 
 exports.updateTask = function(userid, taskid, taskData, callback) {
-    console.log('Userid = ' + userid + ', taskid = ' + taskid + ', taskData = ' + util.inspect(taskData));
+    //console.log('Userid = ' + userid + ', taskid = ' + taskid + ', taskData = ' + util.inspect(taskData));
     self.findById(userid, function(userObj) {
         //console.log('user exists: ' + util.inspect(userObj));
         //find task by id
@@ -133,6 +134,7 @@ exports.updateTask = function(userid, taskid, taskData, callback) {
         if (taskData.uid) { //move 
             //get new owner
             self.findById(taskData.uid, function(newOwner) {
+                task.from = userObj.screenName;
                 newOwner.tasks.push(task);
                 newOwner.save(function(err) {
                     if (!err)  {

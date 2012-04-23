@@ -48,7 +48,7 @@
           <h3 >Welcome <span data-bind="text: name">username</span><small>  See what you have got in your bucket ...</small></h3>
           <form class="well form-inline" data-bind="submit: addTask" method="post">
               <label class="control-label" for="task-field">Add Task:</label>
-              <input type="text" class="input-xlarge" id="task-field" data-bind="value: newTaskText" placeholder="What needs to be done?" />
+              <input type="text" class="input-xlarge" id="task-field" data-bind="value: newTaskText" placeholder="What needs to be done?" maxlength="50" />
               <select class="input-small" data-bind="options: priorities, value: newTaskPriority"></select>
             <button class="btn" type="submit">Add</button>
           </form>
@@ -59,6 +59,7 @@
                       <td class="centered eight-per"><input type="checkbox" data-bind="checked: isDone, disable: editMode, click: $parent.toggleCompletion" /></td>
                       <td data-bind="css: {disabled: isDone}">
                         <span data-bind="visible: !editMode(), text: title"></span>
+                        <span class="label label-important float-right" data-bind="visible: !editMode() && from() !== 'own', text: from"></span>
                         <input class="input-xlarge margin-top-8px" data-bind="visible: editMode(), value: title" />
                       </td>
                       <td class="centered sixteen-per" data-bind="css: {disabled: isDone}">

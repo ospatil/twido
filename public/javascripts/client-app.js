@@ -21,6 +21,7 @@ $(document).ready(function() {
         self.editMode = ko.observable(false); 
         self.editingTitle = ko.observable();
         self.editingPriority = ko.observable();
+        self.from = ko.observable(data.from);
     }
 
     function Buddy(data) {
