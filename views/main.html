@@ -89,7 +89,13 @@
             <a data-bind="click: getBuddies"><i class="icon-refresh float-right" title="Refresh"></i></a>
           </div>
           <ul id="buddy-list" class="unstyled text-centered" data-bind="visible: buddies().length > 0, foreach: { data: buddies, afterRender: onAfterRenderBuddy }">
-            <li data-bind="attr: {id: id}"><div class="buddy"><span data-bind="text: screenName"></div></li>
+            <li data-bind="attr: {id: id}">
+              <div class="buddy" data-bind="css: { 'buddy-online': online, 'buddy-offline': !online}">
+                <span data-bind="text: screenName"></span>
+                <span class="float-right"><img data-bind="visible: online" src="images/online.png"/></span>
+                <span class="float-right"><img data-bind="visible: !online" src="images/offline.png"/></span>
+              </div>
+            </li>
           </ul>
           <div class="alert" data-bind="visible: buddies().length == 0">
             <p>You can pass todos to your buddies too. All you have to do is </p>
@@ -111,6 +117,7 @@
     <script src="/javascripts/lib/jquery.jnotify.min.js"></script>
     <script src="/javascripts/lib/knockout-2.0.0.js"></script>
     <script src="/javascripts/lib/jquery.url.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="/javascripts/client-app.js"></script>
   </body>
 </html>

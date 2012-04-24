@@ -1,4 +1,5 @@
 $(document).ready(function() {
+    var userViewModel = null; //will hold the instance of UserViewModel
 
     ko.bindingHandlers.popover = {
         init: function(element, valueAccessor, allBindingsAccessor, viewModel) {
@@ -210,8 +211,18 @@ $(document).ready(function() {
     //console.log("UID received = " + uid);
     var url = userUrl.replace(':id', uid);
     $.getJSON(url, function(data) {
-        var appViewModel = new UserViewModel(data);
+        userViewModel = new UserViewModel(data);
         // Activates knockout.js
-        ko.applyBindings(appViewModel);
+        ko.applyBindings(userViewModel);
+        initSocketIO();
     });
+
+    function initSocketIO() {
+        var socket = io.connect('http://local.host/' + uid);
+        //console.log('userViewModel = ', userViewModel);
+        socket.on('news', function (data) {
+            //console.log(data);
+            socket.emit('my other event', { my: 'data' });
+        });
+    }    
 });

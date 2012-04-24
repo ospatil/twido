@@ -257,6 +257,23 @@ function processTwitterUser(twUser, callback) {
     });
 }
 
+exports.getMemberOfBuddyList = function(userId, callback) {
+    User.where('buddies.id', userId)
+        .where('online', true)
+        .select('id')
+        .run(function(err, docs) {
+            console.log('User ' + userId + ' is member of buddies list of these users : ' + util.inspect(docs));
+            if (!err) {
+                if (typeof callback === 'function') {
+                    callback(docs);
+                }
+            } else {
+                //swallow it. Won't make much of a difference.
+            }
+        });
+
+}
+
 function twitterDummy(api, obj, callback) {
     var dummyResp = {
         "users":  [

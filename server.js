@@ -1,11 +1,15 @@
-var express     = require('express')
-    , routes    = require('./routes')
-    , everyauth = require('everyauth')
-    , util      = require('util')
-    , conf      = require('./modules/conf')
-    , model     = require('./modules/model')
-    , Resource  = require('express-resource')
-    , gzippo    = require('gzippo');
+var express         = require('express')
+    , routes        = require('./routes')
+    , everyauth     = require('everyauth')
+    , util          = require('util')
+    , conf          = require('./modules/conf')
+    , model         = require('./modules/model')
+    , Resource      = require('express-resource')
+    , gzippo        = require('gzippo')
+    , io            = require('socket.io')
+    , async         = require('async')
+    , parseCookie   = require('connect').utils.parseCookie
+    , sessionStore  = new express.session.MemoryStore();
 
 var app = module.exports = express.createServer();
 
@@ -21,7 +25,7 @@ app.configure(function(){
 
     app.use(express.bodyParser());
     app.use(express.cookieParser());
-    app.use(express.session({cookie: {maxAge: 15 * 60000}, secret: conf.session_secret})); //max age = 10 min
+    app.use(express.session({cookie: {maxAge: 15 * 60000}, store: sessionStore, secret: conf.session_secret})); //max age = 10 min
     app.use(everyauth.middleware());
     app.use(express.methodOverride());
     app.use(app.router);
@@ -70,6 +74,9 @@ var doSessionCheck = function(req, res, next, callback) {
             res.send(statusCode);
         });
     } else {
+        if(typeof callback === 'function') {
+            callback(req, res);
+        }
         next();
     }
 
@@ -85,4 +92,46 @@ userResource.add(taskResource);
 userResource.add(buddyResource);
 
 app.listen(conf.app_port);
+
 console.log("Express server listening on port %d in %s mode", app.address().port, app.settings.env);
+
+var sio = io.listen(app);
+
+sio.set('authorization', function (data, accept) {
+    if (data.headers.cookie) {
+        data.cookie = parseCookie(data.headers.cookie);
+        data.sessionID = data.cookie['connect.sid'];
+        // get the session data from the session store
+        sessionStore.get(data.sessionID, function (err, session) {
+            if (err || !session) {
+                // if we cannot grab a session, turn down the connection
+                accept('Error', false);
+            } else {
+                // save the session data and accept the connection
+                data.session = session;
+                accept(null, true);
+            }
+        });
+    } else {
+       return accept('No cookie transmitted.', false);
+    }
+});
+ 
+sio.sockets.on('connection', function (socket) {
+    var userId = socket.handshake.session.auth.userId;
+    console.log('A socket with userId ' + userId + ' connected!');
+    //create a separate namespace for the user
+    socket.join(userId);
+
+    //Find all the users which have this user in their buddy list and notify them 
+    model.getMemberOfBuddyList(userId, function(userIds) {
+        async.forEach(userIds, function(item, cb) {
+            sio.sockets.in(item).send({online: userId});
+            cb();
+        }, null);
+    });
+    /*socket.emit('news', { hello: 'world' });
+    socket.on('my other event', function (data) {
+        console.log(data);
+    });*/
+});
