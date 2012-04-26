@@ -219,10 +219,12 @@ $(document).ready(function() {
 
     function initSocketIO() {
         var socket = io.connect('http://local.host/' + uid);
-        //console.log('userViewModel = ', userViewModel);
-        socket.on('news', function (data) {
-            //console.log(data);
-            socket.emit('my other event', { my: 'data' });
+        socket.on('online', function (data) {
+            console.log("Who got online? " + data);
+        });
+
+        socket.on('offline', function (data) {
+            console.log("Who went offline? " + data);
         });
     }    
 });

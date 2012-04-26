@@ -126,12 +126,18 @@ sio.sockets.on('connection', function (socket) {
     //Find all the users which have this user in their buddy list and notify them 
     model.getMemberOfBuddyList(userId, function(userIds) {
         async.forEach(userIds, function(item, cb) {
-            sio.sockets.in(item).send({online: userId});
+            sio.sockets.in(item).send('online', userId);
             cb();
         }, null);
     });
-    /*socket.emit('news', { hello: 'world' });
-    socket.on('my other event', function (data) {
-        console.log(data);
-    });*/
+
+    socket.on('disconnect', function () {
+        console.log('A socket with UserId ' + userId + ' disconnected!');
+        model.getMemberOfBuddyList(userId, function(userIds) {
+            async.forEach(userIds, function(item, cb) {
+                sio.sockets.in(item).send('offline', userId);
+                cb();
+            }, null);
+        });        
+    });
 });

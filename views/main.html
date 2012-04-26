@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Gnie - The full-stack JS Todo Manager</title>
+    <title>Twido - The full-stack JS Todo Manager</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="">
     <meta name="author" content="Omkar Patil">
@@ -30,10 +30,10 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </a>
-          <a class="brand" data-bind="attr: { href: mainUrl}">Gnie</a>
+          <a class="brand">Twido</a>
           <div class="nav-collapse">
             <ul class="nav">
-              <li><a id="about" data-bind="popover: {placement: 'bottom'}" href="https://github.com/ospatil/gnie" target="_blank" rel="popover" data-content="Click to check out the Gnie Github page for the usual suspects - why, how, what and what not ...">About</a></li>
+              <li><a id="about" data-bind="popover: {placement: 'bottom'}" href="https://github.com/ospatil/twido" target="_blank" rel="popover" data-content="Click to check out the Twido Github page for the usual suspects - why, how, what and what not ...">About</a></li>
             </ul>
             <ul class="nav pull-right">
               <li><a id="logout" data-bind="attr: { href: logoutUrl}" title="Logout">Logout</a></li>
@@ -84,7 +84,7 @@
         
         <div class="span2 offset1 text-centered">
           <div class="alert alert-info">
-            <i class="icon-info-sign float-left" data-bind="popover: {placement: 'bottom'}" data-content="Use refresh icon to fetch your buddies again if you add members to <strong>mygnie</strong> list on twitter."></i>
+            <i class="icon-info-sign float-left" data-bind="popover: {placement: 'bottom'}" data-content="Use refresh icon to fetch your buddies again if you add members to <strong>mytwido</strong> list on twitter."></i>
             <strong>Buddies</strong>
             <a data-bind="click: getBuddies"><i class="icon-refresh float-right" title="Refresh"></i></a>
           </div>
@@ -100,7 +100,7 @@
           <div class="alert" data-bind="visible: buddies().length == 0">
             <p>You can pass todos to your buddies too. All you have to do is </p>
             <p>Go to twitter.</p>
-            <p>Create a public list named <strong>mygnie</strong>.</p>
+            <p>Create a public list named <strong>mytwido</strong>.</p>
             <p>Add a few members to it.</p>
             <p>Hit refresh icon above.</p>
             <p>Drag and drop todos from todo list on your buddies.</p>

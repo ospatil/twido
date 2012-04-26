@@ -1,5 +1,5 @@
 {
-    "name": "Gnie"
+    "name": "Twido"
     , "author": "Omkar Patil <ospatil@gmail.com>"
     , "description": "The full-stack JS Todo Manager"
     , "version": "0.0.1"
@@ -14,5 +14,6 @@
         , "twit": "0.1.3"
         , "async": "0.1.18"
         , "connect": "1.8.6"
+        , "memory-cache": "0.0.1"
     }
 }
