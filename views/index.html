@@ -8,8 +8,8 @@
     <meta name="author" content="Omkar Patil">
 
     <!-- Le styles -->
-    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <link href="bootstrap/css/bootstrap-responsive.min.css" rel="stylesheet">
+    <link href="/stylesheets/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/stylesheets/css/bootstrap-responsive.min.css" rel="stylesheet">
     <link href='http://fonts.googleapis.com/css?family=Indie+Flower' rel='stylesheet' type='text/css'>
     <link href="stylesheets/style.css" rel="stylesheet">
 
@@ -62,8 +62,9 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="http://code.jquery.com/jquery-1.7.2.min.js"></script>
-    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script>window.jQuery || document.write(unescape('%3Cscript src="/javascripts/lib/jquery-1.7.2.min.js"%3E%3C/script%3E'))</script>
+    <script src="/javascripts/lib/bootstrap.min.js"></script>
     <script type="text/javascript">
       $(document).ready(function() {
         $('#about').popover({placement: 'bottom'});
@@ -71,5 +72,13 @@
     </script>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
     </script>
+    <!-- Asynchronous Google Analytics snippet. Change UA-XXXXX-X to be your site's ID.
+           mathiasbynens.be/notes/async-analytics-snippet -->
+    <script>
+      var _gaq=[['_setAccount','UA-XXXXX-X'],['_trackPageview']];
+      (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+      g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+      s.parentNode.insertBefore(g,s)}(document,'script'));
+    </script>    
   </body>
 </html>
