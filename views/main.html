@@ -36,6 +36,7 @@
               <li><a id="about" data-bind="popover: {placement: 'bottom'}" href="https://github.com/ospatil/twido" target="_blank" rel="popover" data-content="Click to check out the Twido Github page for the usual suspects - why, how, what and what not ...">About</a></li>
             </ul>
             <ul class="nav pull-right">
+              <li class="padding-top-10px"><a href="https://twitter.com/share" class="twitter-share-button" data-url="http://twido.nodester.com" data-via="omkar_p" data-hashtags="twido">Tweet</a></li>
               <li><a id="logout" data-bind="attr: { href: logoutUrl}" title="Logout">Logout</a></li>
             </ul>
           </div><!--/.nav-collapse -->
@@ -119,5 +120,7 @@
     <script src="/javascripts/lib/jquery.url.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script src="/javascripts/client-app.js"></script>
+    <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
+    </script>
   </body>
 </html>

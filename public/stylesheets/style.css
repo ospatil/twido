@@ -87,3 +87,7 @@ td.sixteen-per {
 .float-left {
     float: left;
 }
+
+.padding-top-10px {
+    padding-top: 10px;
+}
