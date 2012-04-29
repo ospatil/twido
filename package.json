@@ -14,6 +14,6 @@
         , "twit": "0.1.3"
         , "async": "0.1.18"
         , "connect": "1.8.6"
-        , "memory-cache": "0.0.1"
+        , "underscore": "1.3.3"
     }
 }
