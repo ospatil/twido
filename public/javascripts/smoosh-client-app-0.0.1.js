@@ -29,7 +29,7 @@ $(document).ready(function() {
         var self = this;
         self.id = data.id;
         self.screenName = data.screenName;
-        self.online = ko.observable(false);
+        self.online = data.online;
     }
 
     function UserViewModel(data) {
@@ -218,40 +218,13 @@ $(document).ready(function() {
     });
 
     function initSocketIO() {
-        var socket = io.connect();
-        
-        socket.on('connect', function() {
-            socket.on('init', function (data) {
-                ko.utils.arrayForEach(data.online, function(uid) {
-                    var buddy = ko.utils.arrayFirst(userViewModel.buddies(), function(item) {
-                        return uid === item.id;
-                    });
-                    //console.log('whos the buddy? ', buddy);
-                    buddy.online(true);
-                });
-            });
-            
-            socket.on('taskmove', function (task) {
-                //console.log("Who got online? " + uid);
-                userViewModel.tasks().push(task);
-            });
+        var socket = io.connect('http://local.host/' + uid);
+        socket.on('online', function (data) {
+            console.log("Who got online? " + data);
+        });
 
-            socket.on('online', function (uid) {
-                //console.log("Who got online? " + uid);
-                var buddy = ko.utils.arrayFirst(userViewModel.buddies(), function(item) {
-                            return uid === item.id;
-                });
-                buddy.online(true);
-            });
-
-            socket.on('offline', function (uid) {
-                //console.log("Who went offline? " + uid);
-                var buddy = ko.utils.arrayFirst(userViewModel.buddies(), function(item) {
-                            return uid === item.id;
-                });
-                buddy.online(false);
-            });
-
+        socket.on('offline', function (data) {
+            console.log("Who went offline? " + data);
         });
     }    
 });
