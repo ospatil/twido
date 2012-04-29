@@ -53,6 +53,14 @@ app.all('/main', function(req, res, next) {
     doSessionCheck(req, res, next);
 });
 
+app.error(function(error, request, response, next) {
+    response.render('500', {
+        status: 500,
+        error: util.inspect(error),
+        showDetails: application.settings.showErrorDetails
+    });
+});
+
 var doSessionCheck = function(req, res, next, callback) {
     var statusCode = -1;
     if (req.session && req.session.auth && req.session.auth.userId) {
@@ -131,6 +139,11 @@ sio.set('authorization', function (data, accept) {
        return accept('No cookie transmitted.', false);
     }
 });
+
+status.monitor.on('taskmove', function(data) {
+    //console.log('taskmove callback called ...' + util.inspect(data));
+    sio.sockets.in(data.uid).emit('taskmove', data.task);
+});
  
 sio.sockets.on('connection', function (socket) {
     var userId = socket.handshake.session.auth.userId;
@@ -140,34 +153,32 @@ sio.sockets.on('connection', function (socket) {
 
     //Send the list of buddies of this user are that are online
     model.findById(userId, function(user) {
-        console.log('Getting buddies of ' + userId + util.inspect(user.buddies));
+        //console.log('Getting buddies of ' + userId + util.inspect(user.buddies));
         var buddyIds = [];
         for(var i = 0; i < user.buddies.length; i++) {
             buddyIds.push(user.buddies[i].id);
         }
         var onlineBuddies = status.getOnlineUsers(buddyIds);
         //sio.sockets.in(userId).emit('init', {online : onlineBuddies});
-        sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+        if (onlineBuddies.length > 0) {
+            sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+        }
     }); 
 
     //Find all the users which have this user in their buddy list and notify them 
     model.getMemberOfBuddyList(userId, function(userIds) {
         async.forEach(userIds, function(item, cb) {
-            sio.sockets.in(item).emit('online', userId);
+            console.log('Notifying user : ' + item);
+            sio.sockets.in(item.id).emit('online', userId);
             cb();
         }, null);
-    });
-
-    status.monitor.on('taskmove', function(data) {
-        //console.log('taskmove callback called ...' + util.inspect(data));
-        sio.sockets.in(data.uid).emit('taskmove', data.task);
     });
 
     socket.on('disconnect', function () {
         console.log('A socket with UserId ' + userId + ' disconnected!');
         model.getMemberOfBuddyList(userId, function(userIds) {
             async.forEach(userIds, function(item, cb) {
-                sio.sockets.in(item).emit('offline', userId);
+                sio.sockets.in(item.id).emit('offline', userId);
                 cb();
             }, null);
         });        
