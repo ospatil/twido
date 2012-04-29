@@ -232,8 +232,8 @@ $(document).ready(function() {
             });
             
             socket.on('taskmove', function (task) {
-                //console.log("Who got online? " + uid);
-                userViewModel.tasks().push(task);
+                console.log("taskmove notification received with data: ", task);
+                userViewModel.tasks.push(new Task(task));
             });
 
             socket.on('online', function (uid) {
