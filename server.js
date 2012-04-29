@@ -8,6 +8,7 @@ var express         = require('express')
     , gzippo        = require('gzippo')
     , io            = require('socket.io')
     , async         = require('async')
+    , status        = require('./modules/status-monitor')
     , parseCookie   = require('connect').utils.parseCookie
     , sessionStore  = new express.session.MemoryStore();
 
@@ -30,14 +31,16 @@ app.configure(function(){
     app.use(express.methodOverride());
     app.use(app.router);
     //app.use(express.static(__dirname + '/public'));
-    app.use(gzippo.staticGzip(__dirname + '/public'));
+    //app.use(gzippo.staticGzip(__dirname + '/public'));
 });
 
 app.configure('development', function(){
+    app.use(express.static(__dirname + '/public'));
     app.use(express.errorHandler({ dumpExceptions: true, showStack: true }));
 });
 
 app.configure('production', function(){
+    app.use(gzippo.staticGzip(__dirname + '/public'));
     app.use(express.errorHandler());
 });
 
@@ -69,10 +72,8 @@ var doSessionCheck = function(req, res, next, callback) {
                 req.session.destroy();
             }
         }
-
-        model.updateUser({id: req.params.user}, { online: false }, function() {
-            res.send(statusCode);
-        });
+        status.monitor.emit('offline', req.params.user);
+        res.send(statusCode);
     } else {
         if(typeof callback === 'function') {
             callback(req, res);
@@ -97,6 +98,20 @@ console.log("Express server listening on port %d in %s mode", app.address().port
 
 var sio = io.listen(app);
 
+sio.configure('production', function() {
+    sio.enable('browser client minification');  // send minified client
+    sio.enable('browser client etag');          // apply etag caching logic based on version number
+    sio.enable('browser client gzip');          // gzip the file
+    sio.set('log level', 1);                    // reduce logging
+    sio.set('transports', [                     // enable all transports (optional if you want flashsocket)
+        'websocket'
+        , 'flashsocket'
+        , 'htmlfile'
+        , 'xhr-polling'
+        , 'jsonp-polling'
+    ]);
+});
+
 sio.set('authorization', function (data, accept) {
     if (data.headers.cookie) {
         data.cookie = parseCookie(data.headers.cookie);
@@ -120,22 +135,39 @@ sio.set('authorization', function (data, accept) {
 sio.sockets.on('connection', function (socket) {
     var userId = socket.handshake.session.auth.userId;
     console.log('A socket with userId ' + userId + ' connected!');
-    //create a separate namespace for the user
+    //create a separate room for the user
     socket.join(userId);
+
+    //Send the list of buddies of this user are that are online
+    model.findById(userId, function(user) {
+        console.log('Getting buddies of ' + userId + util.inspect(user.buddies));
+        var buddyIds = [];
+        for(var i = 0; i < user.buddies.length; i++) {
+            buddyIds.push(user.buddies[i].id);
+        }
+        var onlineBuddies = status.getOnlineUsers(buddyIds);
+        //sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+        sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+    }); 
 
     //Find all the users which have this user in their buddy list and notify them 
     model.getMemberOfBuddyList(userId, function(userIds) {
         async.forEach(userIds, function(item, cb) {
-            sio.sockets.in(item).send('online', userId);
+            sio.sockets.in(item).emit('online', userId);
             cb();
         }, null);
+    });
+
+    status.monitor.on('taskmove', function(data) {
+        //console.log('taskmove callback called ...' + util.inspect(data));
+        sio.sockets.in(data.uid).emit('taskmove', data.task);
     });
 
     socket.on('disconnect', function () {
         console.log('A socket with UserId ' + userId + ' disconnected!');
         model.getMemberOfBuddyList(userId, function(userIds) {
             async.forEach(userIds, function(item, cb) {
-                sio.sockets.in(item).send('offline', userId);
+                sio.sockets.in(item).emit('offline', userId);
                 cb();
             }, null);
         });        

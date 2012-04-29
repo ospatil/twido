@@ -1,7 +1,8 @@
 var everyauth   = require('everyauth')
     , conf      = require('./conf')
     , util      = require('util')
-    , model     = require('./model');
+    , model     = require('./model')
+    , status    = require('./status-monitor');
 
 //everyauth.debug = true;
 
@@ -39,11 +40,9 @@ everyauth.everymodule.handleLogout( function (req, res) {
     } else {
         userId = req.query.uid;
     }
-    model.updateUser({id: userId}, { online: false }, function() {
-        req.logout();
-        // And/or put your extra logic here
-        self.redirect(res, self.logoutRedirectPath());
-    });
+    status.monitor.emit('offline', userId);
+    req.logout();
+    self.redirect(res, self.logoutRedirectPath());
 });
 
 everyauth

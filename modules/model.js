@@ -3,6 +3,8 @@ var mongoose    = require('mongoose')
     , util      = require('util')
     , twit      = require('twit')
     , async     = require('async')
+    , events    = require('events')
+    , status   = require('./status-monitor')
     , Schema    = mongoose.Schema;
 
 var self = this;
@@ -16,8 +18,7 @@ var TaskSchema = new Schema({
 
 var BuddySchema = new Schema({
     id          : String,
-    screenName  : String,
-    online      : {type: Boolean, default: false} 
+    screenName  : String 
 });
 
 var UserSchema = new Schema({
@@ -25,7 +26,6 @@ var UserSchema = new Schema({
     name        : String,
     screenName  : String,
     email       : String,
-    online      : {type: Boolean, default: false},
     auth        : {
                     accessToken       : String,
                     accessTokenSecret : String
@@ -49,7 +49,7 @@ exports.findOrCreateByMetaData = function(accessToken, accessTokenSecret, twitte
         }
         if (user) { //user exists
             //console.log('user exists: ' + util.inspect(user));
-            self.updateUser({id: user.id}, { online: true });
+            status.monitor.emit('online', user.id);
             promise.fulfill(user);
         } else { //user needs to be created
             var newUser = new User();
@@ -57,7 +57,6 @@ exports.findOrCreateByMetaData = function(accessToken, accessTokenSecret, twitte
             newUser.name = twitterUserMetadata.name;
             newUser.screenName = twitterUserMetadata.screen_name;
             newUser.email = twitterUserMetadata.email;
-            newUser.online = true;
             newUser.auth = {};
             newUser.auth.accessToken = accessToken;
             newUser.auth.accessTokenSecret = accessTokenSecret;
@@ -70,6 +69,7 @@ exports.findOrCreateByMetaData = function(accessToken, accessTokenSecret, twitte
                   return;
                 }
                 //console.log('user created: ' + util.inspect(newUser));
+                status.monitor.emit('online', newUser.id);
                 promise.fulfill(newUser);
             });
         }
@@ -144,7 +144,20 @@ exports.updateTask = function(userid, taskid, taskData, callback) {
                         userObj.save(function(err) {
                             if (!err)  {
                                 //console.log('Task' + task._id + ' removed from user ' + userObj.id);
-                                //may be a twitter direct message can be sent
+                                //check if the user is online 
+                                if (status.isOnline(newOwner.id) !== -1) {//user online
+                                    status.monitor.emit('taskmove', {uid: newOwner.id, task: task});
+                                } /*else { //possibly send twitter direct message 
+                                    var twitter = new twit({
+                                        consumer_key: conf.tw_consumer_key
+                                      , consumer_secret: conf.tw_consumer_secret
+                                      , access_token: userObj.auth.accessToken
+                                      , access_token_secret: userObj.auth.accessTokenSecret
+                                    });
+                                    //twitter.post('direct_messages/new', { screen_name: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
+
+                                        //});
+                                }*/
                                 callback(task);
                             } else {
                                 throw err;
@@ -198,18 +211,18 @@ exports.getBuddies = function(userid, callback) {
           , access_token_secret: userObj.auth.accessTokenSecret
         });
         //userObj.buddies.length = 0;
-        //twitter.get('lists/members', { slug: 'mygnie', owner_screen_name: userObj.screenName }, function(err, reply) {
-        twitterDummy('lists/members', { slug: 'mygnie', owner_screen_name: userObj.screenName }, function(err, reply) {
+        //twitter.get('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
+        twitterDummy('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
             if (!err) {        
                 async.map(reply.users, processTwitterUser, function(error, results) {
-                    console.log("Result of Mapping: " + util.inspect(results));
+                    //console.log("Result of Mapping: " + util.inspect(results));
                     userObj.buddies = results;
-                    console.log("looking into user object: " + util.inspect(userObj));
+                    //console.log("looking into user object: " + util.inspect(userObj));
                     userObj.save(function(err) {
                         if (err) {
                             throw err;
                         } else {
-                            console.log('Added buddies to user = ' + userObj.id);
+                            //console.log('Added buddies to user = ' + userObj.id);
                             callback(results);
                         }
                     });
@@ -259,7 +272,6 @@ function processTwitterUser(twUser, callback) {
 
 exports.getMemberOfBuddyList = function(userId, callback) {
     User.where('buddies.id', userId)
-        .where('online', true)
         .select('id')
         .run(function(err, docs) {
             console.log('User ' + userId + ' is member of buddies list of these users : ' + util.inspect(docs));
@@ -271,7 +283,6 @@ exports.getMemberOfBuddyList = function(userId, callback) {
                 //swallow it. Won't make much of a difference.
             }
         });
-
 }
 
 function twitterDummy(api, obj, callback) {
