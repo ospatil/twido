@@ -1,5 +1,6 @@
 {
     "name": "Twido"
+    , "node": "0.6.12"
     , "author": "Omkar Patil <ospatil@gmail.com>"
     , "description": "The full-stack JS Todo Manager"
     , "version": "0.0.1"
