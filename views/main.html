@@ -2,22 +2,28 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
-    <title>Twido - The full-stack JS Todo Manager</title>
+    <title>Twido - The full-stack JS Todo Manager Demo App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="">
+    <meta name="description" content="Twido is an app that demonstrates use of javascript as fullstack solution all the way from client to server. It uses jQuery and Knockout on the client side, express.js as a server-side node.js based web framework, socket.io for realtime communication and mongodb for persistence. It also demonstrates use of twitter for authentication and buddy list feature.">
     <meta name="author" content="Omkar Patil">
 
     <!-- Le styles -->
-    <link href="/stylesheets/css/bootstrap.min.css" rel="stylesheet">
-    <link href="/stylesheets/css/bootstrap-responsive.min.css" rel="stylesheet">
-    <link href="/stylesheets/jquery.jnotify.min.css" rel="stylesheet">
-    <link href="/stylesheets/jquery-ui-1.8.19.custom.css" rel="stylesheet">
-    <link href="/stylesheets/style.css" rel="stylesheet">
+    <link href="/stylesheets/css/smoosh-bootstrap-0.0.1.min.css" rel="stylesheet">
+    <link href="/stylesheets/smoosh-0.0.1.min.css" rel="stylesheet">
+    <link href="/stylesheets/client-app.css" rel="stylesheet">
 
     <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
     <!--[if lt IE 9]>
       <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
     <![endif]-->
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+    <script>window.jQuery || document.write(unescape('%3Cscript src="/javascripts/lib/jquery-1.7.2.min.js"%3E%3C/script%3E'))</script>
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.19/jquery-ui.min.js"></script>
+    <script>window.jQuery || document.write(unescape('%3Cscript src="/javascripts/lib/jquery-ui-1.8.19.custom.min.js"%3E%3C/script%3E'))</script>
+    <script src="/javascripts/smoosh-0.0.1.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/javascripts/client-app.js"></script>    
   </head>
 
   <body>
@@ -48,7 +54,7 @@
         <div id="content" class="span8">
           <h3 >Welcome <span data-bind="text: name">username</span><small>  See what you have got in your bucket ...</small></h3>
           <form class="well form-inline" data-bind="submit: addTask" method="post">
-              <label class="control-label" for="task-field">Add Task:</label>
+              <label class="control-label" for="task-field">Add Todo:</label>
               <input type="text" class="input-xlarge" id="task-field" data-bind="value: newTaskText" placeholder="What needs to be done?" maxlength="50" />
               <select class="input-small" data-bind="options: priorities, value: newTaskPriority"></select>
             <button class="btn" type="submit">Add</button>
@@ -91,10 +97,10 @@
           </div>
           <ul id="buddy-list" class="unstyled text-centered" data-bind="visible: buddies().length > 0, foreach: { data: buddies, afterRender: onAfterRenderBuddy }">
             <li data-bind="attr: {id: id}">
-              <div class="buddy" data-bind="css: { 'buddy-online': online, 'buddy-offline': !online}">
+              <div class="buddy" data-bind="css: { 'buddy-online': online(), 'buddy-offline': !online()}">
                 <span data-bind="text: screenName"></span>
-                <span class="float-right"><img data-bind="visible: online" src="images/online.png"/></span>
-                <span class="float-right"><img data-bind="visible: !online" src="images/offline.png"/></span>
+                <span class="float-right"><img data-bind="visible: online()" src="images/online.png"/></span>
+                <span class="float-right"><img data-bind="visible: !online()" src="images/offline.png"/></span>
               </div>
             </li>
           </ul>
@@ -112,16 +118,6 @@
     <!-- Le javascript
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
-    <script>window.jQuery || document.write(unescape('%3Cscript src="/javascripts/lib/jquery-1.7.2.min.js"%3E%3C/script%3E'))</script>
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.19/jquery-ui.min.js"></script>
-    <script>window.jQuery || document.write(unescape('%3Cscript src="/javascripts/lib/jquery-ui-1.8.19.custom.min.js"%3E%3C/script%3E'))</script>
-    <script src="/javascripts/lib/bootstrap.min.js"></script>
-    <script src="/javascripts/lib/jquery.jnotify.min.js"></script>
-    <script src="/javascripts/lib/knockout-2.0.0.js"></script>
-    <script src="/javascripts/lib/jquery.url.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="/javascripts/client-app.js"></script>
     <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
     </script>
     <!-- Asynchronous Google Analytics snippet. Change UA-XXXXX-X to be your site's ID.
