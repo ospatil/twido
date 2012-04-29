@@ -5,7 +5,7 @@ var everyauth   = require('everyauth')
     , status    = require('./status-monitor');
 
 //everyauth.debug = true;
-
+everyauth.everymodule.moduleTimeout(2000); // Wait 2 seconds per step instead before timing out
 /*everyauth.facebook
     .performRedirect( function (res, location) {
         console.log("##### custom redirect #####");
@@ -53,10 +53,11 @@ everyauth
         //console.log(util.inspect(twitterUserMetadata));
         promise = this.Promise();
         model.findOrCreateByMetaData(accessToken, accessTokenSecret, twitterUserMetadata, promise);
+        //throw new Error('dummy');
         return promise;
     })
     .redirectPath('/main');
 
 everyauth.everymodule.moduleErrback( function (err) {
-    throw err;
+    return; //return and let individual req hang till everyauth makes resp available here for redirecting, or else it brings down the whole nodejs server
 });    
