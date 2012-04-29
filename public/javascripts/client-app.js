@@ -232,7 +232,7 @@ $(document).ready(function() {
             });
             
             socket.on('taskmove', function (task) {
-                console.log("taskmove notification received with data: ", task);
+                //console.log("taskmove notification received with data: ", task);
                 userViewModel.tasks.push(new Task(task));
             });
 
