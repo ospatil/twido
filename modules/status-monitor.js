@@ -2,7 +2,7 @@ var events  = require('events')
     und     = require('underscore');
 
 var self = this;
-var online = ['111562435'];
+var online = [];
 
 exports.monitor = new events.EventEmitter();
 

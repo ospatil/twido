@@ -211,8 +211,8 @@ exports.getBuddies = function(userid, callback) {
           , access_token_secret: userObj.auth.accessTokenSecret
         });
         //userObj.buddies.length = 0;
-        //twitter.get('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
-        twitterDummy('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
+        twitter.get('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
+        //twitterDummy('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
             if (!err) {        
                 async.map(reply.users, processTwitterUser, function(error, results) {
                     //console.log("Result of Mapping: " + util.inspect(results));
@@ -274,7 +274,7 @@ exports.getMemberOfBuddyList = function(userId, callback) {
     User.where('buddies.id', userId)
         .select('id')
         .run(function(err, docs) {
-            console.log('User ' + userId + ' is member of buddies list of these users : ' + util.inspect(docs));
+            //console.log('User ' + userId + ' is member of buddies list of these users : ' + util.inspect(docs));
             if (!err) {
                 if (typeof callback === 'function') {
                     callback(docs);
@@ -285,7 +285,7 @@ exports.getMemberOfBuddyList = function(userId, callback) {
         });
 }
 
-function twitterDummy(api, obj, callback) {
+/*function twitterDummy(api, obj, callback) {
     var dummyResp = {
         "users":  [
         {
@@ -435,4 +435,4 @@ function twitterDummy(api, obj, callback) {
     "previous_cursor_str": "0"
     };
     callback(null, dummyResp);
-}
+}*/
