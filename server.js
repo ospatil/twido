@@ -8,7 +8,7 @@ var express         = require('express')
     , sessionStore  = new MongoStore({
         url: conf.db_string
         , auto_reconnect: true
-        , clear_interval: 120
+        , clear_interval: 60
     });
 
 var app = module.exports = express.createServer();
@@ -25,7 +25,7 @@ app.configure(function(){
     app.use(express.logger('[:date] :method :url :status - :response-time ms'));
     app.use(express.bodyParser());
     app.use(express.cookieParser());
-    app.use(express.session({cookie: {maxAge: 15 * 60000}, store: sessionStore, secret: conf.session_secret})); //max age = 10 min
+    app.use(express.session({cookie: {maxAge: 10 * 60000}, store: sessionStore, secret: conf.session_secret})); //max age = 10 min
     app.use(everyauth.middleware());
     app.use(express.methodOverride());
     app.use(app.router);
