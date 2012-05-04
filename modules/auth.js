@@ -59,5 +59,5 @@ everyauth
     .redirectPath('/main');
 
 everyauth.everymodule.moduleErrback( function (err) {
-    return; //return and let individual req hang till everyauth makes resp available here for redirecting, or else it brings down the whole nodejs server
+    return err; //return and let individual req hang till everyauth makes resp available here for redirecting, or else it brings down the whole nodejs server
 });    
