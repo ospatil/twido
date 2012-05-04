@@ -52,33 +52,36 @@ module.exports = function(appl, store) {
     });
      
     sio.sockets.on('connection', function (socket) {
-        var userId = socket.handshake.session.auth.userId;
-        console.log('A socket with userId ' + userId + ' connected!');
-        //create a separate room for the user
-        socket.join(userId);
+        if (socket.handshake.session && socket.handshake.session.auth && socket.handshake.session.auth.userId) {
+            var userId = socket.handshake.session.auth.userId;
+            console.log('A socket with userId ' + userId + ' connected!');
 
-        //Send the list of buddies of this user are that are online
-        model.findById(userId, function(user) {
-            //console.log('Getting buddies of ' + userId + util.inspect(user.buddies));
-            var buddyIds = [];
-            for(var i = 0; i < user.buddies.length; i++) {
-                buddyIds.push(user.buddies[i].id);
-            }
-            var onlineBuddies = status.getOnlineUsers(buddyIds);
-            //sio.sockets.in(userId).emit('init', {online : onlineBuddies});
-            if (onlineBuddies.length > 0) {
-                sio.sockets.in(userId).emit('init', {online : onlineBuddies});
-            }
-        }); 
+            //create a separate room for the user
+            socket.join(userId);
 
-        //Find all the users which have this user in their buddy list and notify them 
-        model.getMemberOfBuddyList(userId, function(userIds) {
-            async.forEach(userIds, function(item, cb) {
-                console.log('Notifying user : ' + item);
-                sio.sockets.in(item.id).emit('online', userId);
-                cb();
-            }, null);
-        });
+            //Send the list of buddies of this user are that are online
+            model.findById(userId, function(user) {
+                //console.log('Getting buddies of ' + userId + util.inspect(user.buddies));
+                var buddyIds = [];
+                for(var i = 0; i < user.buddies.length; i++) {
+                    buddyIds.push(user.buddies[i].id);
+                }
+                var onlineBuddies = status.getOnlineUsers(buddyIds);
+                //sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+                if (onlineBuddies.length > 0) {
+                    sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+                }
+            }); 
+
+            //Find all the users which have this user in their buddy list and notify them 
+            model.getMemberOfBuddyList(userId, function(userIds) {
+                async.forEach(userIds, function(item, cb) {
+                    console.log('Notifying user : ' + item);
+                    sio.sockets.in(item.id).emit('online', userId);
+                    cb();
+                }, null);
+            });
+        }
 
         socket.on('disconnect', function () {
             console.log('A socket with UserId ' + userId + ' disconnected!');

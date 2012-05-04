@@ -1,43 +1,18 @@
-var app = null;
+var status  = require('../modules/status-monitor')
+    , app   = null;
 
 module.exports = function(appl) {
     app = appl;
     //console.dir(app);
 
-    app.get('/', function(req, res) {
-        //console.log("Route index -> Req URL = " + req.url);
-        res.render('index');
-    });
-    
-    app.get('/main', function(req, res) {
-        //console.log("Route index -> Req URL = " + req.url);
-        res.render('main');
-    });
-
-    // Routes
-    app.all('/users/:user/tasks*', function(req, res, next) {
-        doSessionCheck(req, res, next);
-    });
-
-    app.all('/main', function(req, res, next) {
-        doSessionCheck(req, res, next);
-    });
-
-    app.error(function(error, request, response, next) {
-        response.render('500', {
-            status: 500,
-            error: util.inspect(error),
-            showDetails: application.settings.showErrorDetails
-        });
-    });
-
     var doSessionCheck = function(req, res, next, callback) {
         var statusCode = -1;
         if (req.session && req.session.auth && req.session.auth.userId) {
             //check if the url contains uid, if it does it's a page refresh after login, don't allow it
-            //console.log("query param = " + req.query.uid);
+            console.log("doSessionCheck --- query param = " + req.query.uid);
 
             if (req.query.uid && req.query.uid != req.session.auth.userId) {
+                console.log('doSessionCheck --- sending status code 400');
                 statusCode = 400;
             }
         } else {
@@ -58,8 +33,35 @@ module.exports = function(appl) {
             }
             next();
         }
-
     }
+
+    // Routes
+    app.all('/users/:user/tasks*', function(req, res, next) {
+        doSessionCheck(req, res, next);
+    });
+
+    app.all('/main*', function(req, res, next) {
+        console.log('/main* interceptor invoked ------');
+        doSessionCheck(req, res, next);
+    });
+
+    app.get('/', function(req, res) {
+        //console.log("Route index -> Req URL = " + req.url);
+        res.render('index');
+    });
+    
+    app.get('/main*', function(req, res) {
+        //console.log("Route index -> Req URL = " + req.url);
+        res.render('main');
+    });
+
+    app.error(function(error, request, response, next) {
+        response.render('500', {
+            status: 500,
+            error: util.inspect(error),
+            showDetails: application.settings.showErrorDetails
+        });
+    });
 
     var userResource = app.resource('users', require('../modules/users'));
     var taskResource = app.resource('tasks', require('../modules/tasks'));
