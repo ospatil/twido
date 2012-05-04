@@ -4,7 +4,12 @@ var express         = require('express')
     , conf          = require('./modules/conf')
     , Resource      = require('express-resource')
     , gzippo        = require('gzippo')
-    , sessionStore  = new express.session.MemoryStore();
+    , MongoStore    = require('connect-mongo')(express)
+    , sessionStore  = new MongoStore({
+        url: conf.db_string
+        , auto_reconnect: true
+        , clear_interval: 120
+    });
 
 var app = module.exports = express.createServer();
 
