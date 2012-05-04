@@ -9,10 +9,10 @@ module.exports = function(appl) {
         var statusCode = -1;
         if (req.session && req.session.auth && req.session.auth.userId) {
             //check if the url contains uid, if it does it's a page refresh after login, don't allow it
-            console.log("doSessionCheck --- query param = " + req.query.uid);
+            //console.log("doSessionCheck --- query param = " + req.query.uid);
 
             if (req.query.uid && req.query.uid != req.session.auth.userId) {
-                console.log('doSessionCheck --- sending status code 400');
+                //console.log('doSessionCheck --- sending status code 400');
                 statusCode = 400;
             }
         } else {
@@ -41,7 +41,7 @@ module.exports = function(appl) {
     });
 
     app.all('/main*', function(req, res, next) {
-        console.log('/main* interceptor invoked ------');
+        //console.log('/main* interceptor invoked ------');
         doSessionCheck(req, res, next);
     });
 
