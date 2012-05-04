@@ -17,7 +17,7 @@ app.configure(function(){
     app.set('view options', {
         layout: false
     });
-    app.use(express.logger('short'));
+    app.use(express.logger('[:date] :method :url :status - :response-time ms'));
     app.use(express.bodyParser());
     app.use(express.cookieParser());
     app.use(express.session({cookie: {maxAge: 15 * 60000}, store: sessionStore, secret: conf.session_secret})); //max age = 10 min
