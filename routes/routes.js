@@ -1,4 +1,5 @@
 var status  = require('../modules/status-monitor')
+    , util  = require('util')
     , app   = null;
 
 module.exports = function(appl) {
@@ -53,14 +54,6 @@ module.exports = function(appl) {
     app.get('/main*', function(req, res) {
         //console.log("Route index -> Req URL = " + req.url);
         res.render('main');
-    });
-
-    app.error(function(error, request, response, next) {
-        response.render('500', {
-            status: 500,
-            error: util.inspect(error),
-            showDetails: application.settings.showErrorDetails
-        });
     });
 
     var userResource = app.resource('users', require('../modules/users'));

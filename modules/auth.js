@@ -53,11 +53,10 @@ everyauth
         //console.log(util.inspect(twitterUserMetadata));
         promise = this.Promise();
         model.findOrCreateByMetaData(accessToken, accessTokenSecret, twitterUserMetadata, promise);
-        //throw new Error('dummy');
         return promise;
     })
     .redirectPath('/main');
 
-everyauth.everymodule.moduleErrback( function (err) {
+/*everyauth.everymodule.moduleErrback( function (err) {
     return err; //return and let individual req hang till everyauth makes resp available here for redirecting, or else it brings down the whole nodejs server
-});    
+});*/    

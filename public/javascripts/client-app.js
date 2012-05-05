@@ -32,6 +32,34 @@ $(document).ready(function() {
         self.online = ko.observable(false);
     }
 
+    var ajaxErrorCallback = function(xhr, textStatus, errorThrown) {
+        if (xhr.status == 403) { //session expired
+            $.jnotify("Session Expired. Please login again.", {
+                type: 'warning'
+                , remove: function() {
+                    window.location.replace('/');
+                }
+            }); 
+        } else if (xhr.status == 400) { //URL tampered
+            $.jnotify("URL tampering not allowed. Please login again.", {
+                type: 'error'
+                , remove: function() {
+                    window.location.replace('/');
+                }
+            }); 
+        } else if (xhr.status == 501) {
+            console.log("text status = " + textStatus);
+            $.jnotify("Severe error. Please login again.", {
+                type: 'error'
+                , remove: function() {
+                    window.location.replace('/');
+                }
+            }); 
+        } else {
+            $.jnotify("Oops!! Something snapped. Please try again.", "error");
+        }
+    };
+
     function UserViewModel(data) {
         var self = this;
 
@@ -54,26 +82,6 @@ $(document).ready(function() {
 
         self.newTaskText = ko.observable();
         self.newTaskPriority = ko.observable();
-
-        var ajaxErrorCallback = function(xhr, textStatus, errorThrown) {
-            if (xhr.status == 403) { //session expired
-                $.jnotify("Session Expired. Please login again.", {
-                    type: 'warning'
-                    , remove: function() {
-                        window.location.replace('/');
-                    }
-                }); 
-            } else if (xhr.status == 400) { //URL tampered
-                $.jnotify("URL tampering not allowed. Please login again.", {
-                    type: 'error'
-                    , remove: function() {
-                        window.location.replace('/');
-                    }
-                }); 
-            } else {
-                $.jnotify("Oops!! Something snapped. Please try again.", "error");
-            }
-        };
 
         var updateTask = function(task, successCallback) {
             var url = taskUrl.replace(':id', self.id).replace(':tid', task.id);
@@ -100,7 +108,7 @@ $(document).ready(function() {
             //console.log(jsTask);
             var url = taskCreateUrl.replace(':id', self.id);
             //TODO: make ajax call to server
-            var jqxhr = $.post(url, jsTask, function(data, textStatus, xhr) {
+            $.post(url, jsTask, function(data, textStatus, xhr) {
                 //console.log("data received after creating task = " + data);
                 newTask.id = data._id;
                 self.tasks.push(newTask);
@@ -153,7 +161,7 @@ $(document).ready(function() {
             $.getJSON(url, function(data) {
                 var mappedBuddies = $.map(data, function(item) { return new Buddy(item) });
                 self.buddies(mappedBuddies);
-            });
+            }).error(ajaxErrorCallback);
         };
 
         //draggables created after rendering the row
@@ -215,7 +223,7 @@ $(document).ready(function() {
         // Activates knockout.js
         ko.applyBindings(userViewModel);
         initSocketIO();
-    });
+    }).error(ajaxErrorCallback);
 
     function initSocketIO() {
         var socket = io.connect();

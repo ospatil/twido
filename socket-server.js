@@ -60,16 +60,18 @@ module.exports = function(appl, store) {
             socket.join(userId);
 
             //Send the list of buddies of this user are that are online
-            model.findById(userId, function(user) {
+            model.findById(userId, function(err, user) {
                 //console.log('Getting buddies of ' + userId + util.inspect(user.buddies));
-                var buddyIds = [];
-                for(var i = 0; i < user.buddies.length; i++) {
-                    buddyIds.push(user.buddies[i].id);
-                }
-                var onlineBuddies = status.getOnlineUsers(buddyIds);
-                //sio.sockets.in(userId).emit('init', {online : onlineBuddies});
-                if (onlineBuddies.length > 0) {
-                    sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+                if (!err) {
+                    var buddyIds = [];
+                    for(var i = 0; i < user.buddies.length; i++) {
+                        buddyIds.push(user.buddies[i].id);
+                    }
+                    var onlineBuddies = status.getOnlineUsers(buddyIds);
+                    //sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+                    if (onlineBuddies.length > 0) {
+                        sio.sockets.in(userId).emit('init', {online : onlineBuddies});
+                    }
                 }
             }); 
 

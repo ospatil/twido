@@ -15,6 +15,21 @@ var app = module.exports = express.createServer();
 
 require('./modules/auth');
 
+var errorHandler = function(err, req, res, next) {
+    console.log('Error middleware called ...' + err.message);
+    switch (err.message) {
+        case 'USER_ERR':
+                        if (req.session) {
+                            req.session.destroy();
+                        }
+                        console.log('returning user error');
+                        res.send('USER_ERR', 501);
+                        break;
+            default:    
+                        res.send(500);
+    }
+}
+
 // Configuration
 app.configure(function(){
     app.set('views', __dirname + '/views');
@@ -29,8 +44,8 @@ app.configure(function(){
     app.use(everyauth.middleware());
     app.use(express.methodOverride());
     app.use(app.router);
-    //app.use(express.static(__dirname + '/public'));
-    //app.use(gzippo.staticGzip(__dirname + '/public'));
+
+    app.use(errorHandler);
 });
 
 app.configure('development', function(){

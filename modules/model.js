@@ -4,8 +4,9 @@ var mongoose    = require('mongoose')
     , twit      = require('twit')
     , async     = require('async')
     , events    = require('events')
-    , status   = require('./status-monitor')
-    , Schema    = mongoose.Schema;
+    , status    = require('./status-monitor')
+    , Schema    = mongoose.Schema
+    , emitter   = new events.EventEmitter();
 
 var self = this;
 
@@ -50,6 +51,19 @@ exports.findOrCreateByMetaData = function(accessToken, accessTokenSecret, twitte
         if (user) { //user exists
             //console.log('user exists: ' + util.inspect(user));
             status.monitor.emit('online', user.id);
+            //check if accessToken is present, save if notif 
+            if (!user.auth || !user.auth.accessToken) {
+                user.auth = user.auth || {};
+                user.auth.accessToken = accessToken;
+                user.auth.accessTokenSecret = accessTokenSecret;
+
+                user.save(function(err) {
+                    if (err) {
+                        promise.fulfill([err]);
+                        return;                        
+                    }
+                });
+            }
             promise.fulfill(user);
         } else { //user needs to be created
             var newUser = new User();
@@ -79,18 +93,16 @@ exports.findOrCreateByMetaData = function(accessToken, accessTokenSecret, twitte
 exports.findById = function(userId, callback) {
     User.findOne({id: userId}, function(err, user) {
         if (err) {
-            //console.log("Error fetching user");
-            //console.log(err);
-            throw err;  
+            console.log('Error fetching user: ' + util.inspect(err));
+            callback(new Error('USER_ERR'));  
+        } else {
+            callback(null, user);
         }
-        //if (user) { //user exists
-            //console.log('user exists: ' + util.inspect(user));
-        callback(user);
-        //}
     }); 
 }
 
-exports.updateUser = function(conditions, updateVal, callback) {
+//Not required anymore since online is no longer part of User collection. Just keeping for reference
+/*exports.updateUser = function(conditions, updateVal, callback) {
     var options = { multi: false },
         update = {$set: updateVal};
     User.update(conditions, updateVal, options, function(err, numAffected) {
@@ -102,170 +114,186 @@ exports.updateUser = function(conditions, updateVal, callback) {
     if (typeof callback === 'function') {
         callback();
     }
-}
+}*/
 
 exports.addTask = function(userid, taskData, callback) {
-    self.findById(userid, function(userObj) {
+    self.findById(userid, function(err, userObj) {
         //console.log("req.body = " + util.inspect(req.body));
         //Create new task
-        var newTask = new Task();
-        newTask.title = taskData.title;
-        newTask.priority = taskData.priority;
+        if (err) { //user not found. severe error
+            callback(new Error('USER_ERR'));
+        } else {
+            var newTask = new Task();
+            newTask.title = taskData.title;
+            newTask.priority = taskData.priority;
 
-        userObj.tasks.push(newTask);
-        userObj.save(function(err) {
-            if (!err)  {
-                //console.log('Task added successfully with _id = ' + newTask._id);
-                callback(newTask);
-            } else {
-                throw err;
-            }
-        });
+            userObj.tasks.push(newTask);
+            userObj.save(function(err1) {
+                if (err1)  {
+                    //console.log('Task added successfully with _id = ' + newTask._id);
+                    callback(err1);
+                } else {
+                    callback(null, newTask);
+                }
+            });
+        }
     });
 }
 
 exports.updateTask = function(userid, taskid, taskData, callback) {
     //console.log('Userid = ' + userid + ', taskid = ' + taskid + ', taskData = ' + util.inspect(taskData));
-    self.findById(userid, function(userObj) {
+    self.findById(userid, function(err, userObj) {
         //console.log('user exists: ' + util.inspect(userObj));
-        //find task by id
-        var task = userObj.tasks.id(taskid);
-        
-        if (taskData.uid) { //move 
-            //get new owner
-            self.findById(taskData.uid, function(newOwner) {
-                task.from = userObj.screenName;
-                newOwner.tasks.push(task);
-                newOwner.save(function(err) {
-                    if (!err)  {
-                        console.log('Task id ' + task._id + ' moved to user ' + taskData.uid);
-                        //remove task from original owner and save it
-                        userObj.tasks.id(taskid).remove();
-                        userObj.save(function(err) {
-                            if (!err)  {
-                                //console.log('Task' + task._id + ' removed from user ' + userObj.id);
-                                //check if the user is online 
-                                if (status.isOnline(newOwner.id) !== -1) {//user online
-                                    status.monitor.emit('taskmove', {uid: newOwner.id, task: task});
-                                } /*else { //possibly send twitter direct message 
-                                    var twitter = new twit({
-                                        consumer_key: conf.tw_consumer_key
-                                      , consumer_secret: conf.tw_consumer_secret
-                                      , access_token: userObj.auth.accessToken
-                                      , access_token_secret: userObj.auth.accessTokenSecret
-                                    });
-                                    //twitter.post('direct_messages/new', { screen_name: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
-
-                                        //});
-                                }*/
-                                callback(task);
+        if (err) {//User not found. Severe error
+            callback(new Error('USER_ERR'));
+        } else {
+            //find task by id
+            var task = userObj.tasks.id(taskid);
+            if (taskData.uid) { //move 
+                //get new owner
+                self.findById(taskData.uid, function(err, newOwner) {
+                    if (err) {
+                        callback(err);
+                    } else { 
+                        task.from = userObj.screenName;
+                        newOwner.tasks.push(task);
+                        newOwner.save(function(err) {
+                            if (err)  {
+                                callback(err);
                             } else {
-                                throw err;
+                                console.log('Task id ' + task._id + ' moved to user ' + taskData.uid);
+                                //remove task from original owner and save it
+                                userObj.tasks.id(taskid).remove();
+                                userObj.save(function(err) {
+                                    if (err)  {
+                                        callback(err);
+                                    } else {
+                                        //console.log('Task' + task._id + ' removed from user ' + userObj.id);
+                                        //check if the user is online 
+                                        if (status.isOnline(newOwner.id) !== -1) {//user online
+                                            status.monitor.emit('taskmove', {uid: newOwner.id, task: task});
+                                        } 
+                                        callback(null, task);
+                                    }
+                                });
                             }
                         });
-                    } else {
-                        throw err;
-                    }
-                });                
-            });
-        } else {
-            task.title = taskData.title;
-            task.isDone = taskData.isDone;
-            task.priority = taskData.priority;
+                    }               
+                });
+            } else {
+                task.title = taskData.title;
+                task.isDone = taskData.isDone;
+                task.priority = taskData.priority;
 
-            userObj.save(function(err) {
-                if (!err)  {
-                    console.log('Task added successfully with _id = ' + task._id);
-                    callback(task);
-                } else {
-                    throw err;
-                }
-            });            
+                userObj.save(function(err) {
+                    if (err)  {
+                        callback(err);
+                    } else {
+                        console.log('Task added successfully with _id = ' + task._id);
+                        callback(null, task);
+                    }
+                });            
+            }
         }
     });
 }
 
 exports.deleteTask = function(userid, taskid, callback) {
-    //console.log('##### Delete task Userid = ' + userid + ', taskid = ' + taskid);
-    self.findById(userid, function(userObj) {
-        //remove task by id
-        userObj.tasks.id(taskid).remove();
-
-        userObj.save(function(err) {
-            if (!err)  {
-                //console.log('Task removed with _id = ' + task._id);
-                callback();
-            } else {
-                throw err;
-            }
-        });
+    console.log('##### Delete task Userid = ' + userid + ', taskid = ' + taskid);
+    self.findById(userid, function(err, userObj) {
+        if (err) { //user not found. Severe error
+            callback(new Error('USER_ERR'));
+        } else {
+            console.log('user in delete task = ' + util.inspect(userObj));
+            //remove task by id
+            userObj.tasks.id(taskid).remove();
+            userObj.save(function(err) {
+                if (err)  {
+                    //console.log('Task removed with _id = ' + task._id);
+                    callback(err);
+                } else {
+                    callback(null);
+                } 
+            });
+        }
     });
 }
 
 exports.getBuddies = function(userid, callback) {
-    self.findById(userid, function(userObj) {
-        var twitter = new twit({
-            consumer_key: conf.tw_consumer_key
-          , consumer_secret: conf.tw_consumer_secret
-          , access_token: userObj.auth.accessToken
-          , access_token_secret: userObj.auth.accessTokenSecret
-        });
-        //userObj.buddies.length = 0;
-        twitter.get('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
-        //twitterDummy('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
-            if (!err) {        
-                async.map(reply.users, processTwitterUser, function(error, results) {
-                    //console.log("Result of Mapping: " + util.inspect(results));
-                    userObj.buddies = results;
-                    //console.log("looking into user object: " + util.inspect(userObj));
-                    userObj.save(function(err) {
-                        if (err) {
-                            throw err;
+    self.findById(userid, function(err, userObj) {
+        if (err) { //User not found. Severe error
+            callback(new Error('USER_ERR'));
+        } else {
+            var twitter = new twit({
+                consumer_key: conf.tw_consumer_key
+              , consumer_secret: conf.tw_consumer_secret
+              , access_token: userObj.auth.accessToken
+              , access_token_secret: userObj.auth.accessTokenSecret
+            });
+            //userObj.buddies.length = 0;
+            twitter.get('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
+            //twitterDummy('lists/members', { slug: 'mytwido', owner_screen_name: userObj.screenName }, function(err, reply) {
+                if (err) {        
+                    callback(err);
+                } else {
+                    async.map(reply.users, processTwitterUser, function(error, results) {
+                        if (error) {
+                            callback(error);
                         } else {
-                            //console.log('Added buddies to user = ' + userObj.id);
-                            callback(results);
+                            //console.log("Result of Mapping: " + util.inspect(results));
+                            userObj.buddies = results;
+                            //console.log("looking into user object: " + util.inspect(userObj));
+                            userObj.save(function(err) {
+                                if (err) {
+                                    callback(error);
+                                } else {
+                                    //console.log('Added buddies to user = ' + userObj.id);
+                                    callback(null, results);
+                                }
+                            });
                         }
                     });
-                });
-            } else {
-                //console.log('something went wrong ...' + util.inspect(err));
-                throw err;
-            }
-        });
+                }
+            });
+        }
     });
 }
 
 function processTwitterUser(twUser, callback) {
     console.log("Received user id = " + twUser.id);
-    self.findById(twUser.id, function(dbUser) {
-        if (dbUser) { //user found 
-            //console.log("DBUser found ..." + util.inspect(dbUser));
-            //console.log('Can we access the owner user : ' + util.inspect(userObj));
-            //buddies.push({id: dbUser.id, name: dbUser.screen_name});
-            var buddy = new Buddy();
-            buddy.id = dbUser.id;
-            buddy.screenName = dbUser.screenName;
-            buddy.online = dbUser.online;
-            callback(null, buddy);
+    self.findById(twUser.id, function(err, dbUser) {
+        if (err) {
+            callback(err);
         } else {
-            //console.log("DBUser not found ...");
-            var newUser = new User();
-            newUser.id = twUser.id;
-            newUser.name = twUser.name;
-            newUser.screenName = twUser.screen_name;
-            newUser.email = twUser.email;
+            if (dbUser) { //user found 
+                //console.log("DBUser found ..." + util.inspect(dbUser));
+                //console.log('Can we access the owner user : ' + util.inspect(userObj));
+                //buddies.push({id: dbUser.id, name: dbUser.screen_name});
+                var buddy = new Buddy();
+                buddy.id = dbUser.id;
+                buddy.screenName = dbUser.screenName;
+                buddy.online = dbUser.online;
+                callback(null, buddy);
+            } else {
+                //console.log("DBUser not found ...");
+                var newUser = new User();
+                newUser.id = twUser.id;
+                newUser.name = twUser.name;
+                newUser.screenName = twUser.screen_name;
+                newUser.email = twUser.email;
 
-            newUser.save(function(err) {
-                if (err)  {
-                    throw err;
-                } else {
-                    var buddy = new Buddy();
-                    buddy.id = twUser.id;
-                    buddy.screenName = twUser.screen_name;
-                    callback(null, buddy);
-                }
-                console.log("new user saved ...");
-            });
+                newUser.save(function(err) {
+                    if (err)  {
+                        callback(err);
+                    } else {
+                        var buddy = new Buddy();
+                        buddy.id = twUser.id;
+                        buddy.screenName = twUser.screen_name;
+                        callback(null, buddy);
+                    }
+                    console.log("new user saved ...");
+                });
+            }
         }
     });
 }
@@ -275,12 +303,12 @@ exports.getMemberOfBuddyList = function(userId, callback) {
         .select('id')
         .run(function(err, docs) {
             //console.log('User ' + userId + ' is member of buddies list of these users : ' + util.inspect(docs));
-            if (!err) {
+            if (err) {
+                //swallow it. Won't make much of a difference.
+            } else {
                 if (typeof callback === 'function') {
                     callback(docs);
                 }
-            } else {
-                //swallow it. Won't make much of a difference.
             }
         });
 }
